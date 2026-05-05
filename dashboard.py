@@ -24,6 +24,13 @@ SAMPLE_SIZE = 5_000   # used for scatter / bubble / box / violin to keep the UI 
 TEMPLATE    = "plotly_white"
 H           = 440     # default chart height
 
+# ── Monochromatic palettes (dark → light shades per chart) ───────────────────
+_BLUES   = ["#0d47a1", "#1565c0", "#1976d2", "#2196f3", "#64b5f6"]   # stacked col (positions)
+_ORANGES = ["#bf360c", "#d84315", "#e64a19", "#f4511e", "#ff7043",
+            "#ff8a65", "#ffab91", "#ffccbc", "#fde0d0"]              # stacked bar (nationalities)
+_PURPLES = ["#4a148c", "#6a1b9a", "#7b1fa2", "#9c27b0", "#ba68c8"]   # clustered col (rating groups)
+_TEALS   = ["#004d40", "#00695c", "#009688", "#26a69a", "#80cbc4"]   # box + violin (positions)
+
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 def _resolve_path() -> Path:
@@ -385,18 +392,21 @@ def update_comparison(top_n: int, metric: str):
         DF.groupby("club_name")["overall"].mean()
         .sort_values(ascending=False).head(top_n).reset_index()
     )
-    col_fig = px.bar(
-        club_avg, x="club_name", y="overall",
+    # Dark → light blues: rank 1 (highest) gets darkest shade
+    bar_colors = ["#0f4ea3"] + ["#38a8f4"] * max(len(club_avg) - 1, 0)
+    col_fig = go.Figure(go.Bar(
+        x=club_avg["club_name"],
+        y=club_avg["overall"],
         text=club_avg["overall"].round(1),
-        color="overall", color_continuous_scale="Blues",
-        title=f"Column Chart — Top {top_n} Clubs by Average Overall Rating",
-        labels={"club_name": "Club", "overall": "Avg Overall Rating"},
-        template=TEMPLATE, height=H,
-    )
-    col_fig.update_traces(textposition="outside")
+        textposition="outside",
+        marker_color=bar_colors,
+    ))
     col_fig.update_layout(
-        xaxis_tickangle=-35, coloraxis_showscale=False,
+        title=f"Column Chart — Top {top_n} Clubs by Average Overall Rating",
         xaxis_title="Club", yaxis_title="Avg Overall Rating",
+        xaxis_tickangle=-35,
+        template=TEMPLATE, height=H,
+        plot_bgcolor="white", paper_bgcolor="white",
     )
 
     # ── 2. Bar — Top N players by overall (horizontal) ────────────────────────
@@ -418,6 +428,7 @@ def update_comparison(top_n: int, metric: str):
         yaxis={"categoryorder": "total ascending"},
         coloraxis_showscale=False,
         xaxis_title="Overall Rating", yaxis_title="Player",
+        plot_bgcolor="white", paper_bgcolor="white",
     )
 
     # ── 3. Stacked Column — player count by position per top N clubs ──────────
@@ -427,6 +438,7 @@ def update_comparison(top_n: int, metric: str):
     stk_col_fig = px.bar(
         stk_grp, x="club_name", y="count",
         color="position_group", barmode="stack",
+        color_discrete_sequence=_BLUES,
         title=f"Stacked Column — Player Count by Position (Top {top_n} Clubs)",
         labels={"club_name": "Club", "count": "Players", "position_group": "Position"},
         template=TEMPLATE, height=H,
@@ -447,6 +459,7 @@ def update_comparison(top_n: int, metric: str):
     stk_bar_fig = px.bar(
         nat_grp, x="count", y="club_name",
         color="nationality_label", barmode="stack", orientation="h",
+        color_discrete_sequence=_ORANGES,
         title=f"Stacked Bar — Nationality Distribution (Top {top_n} Clubs)",
         labels={"club_name": "Club", "count": "Players", "nationality_label": "Nationality"},
         template=TEMPLATE, height=H,
@@ -471,6 +484,7 @@ def update_comparison(top_n: int, metric: str):
     clust_col_fig = px.bar(
         clust_grp, x="position_group", y="count",
         color="rating_group", barmode="group",
+        color_discrete_sequence=_PURPLES,
         title="Clustered Column — Players by Position and Rating Group",
         labels={"position_group": "Position", "count": "Players", "rating_group": "Rating Range"},
         template=TEMPLATE, height=H,
@@ -500,7 +514,7 @@ def update_comparison(top_n: int, metric: str):
             y=wage_rating["club_name"],
             x=wage_rating["wage_score"],
             orientation="h",
-            marker_color="#3b82f6",
+            marker_color="#0ea5e9",
             text=wage_rating["avg_wage"].apply(lambda v: f"€{v:,.0f}"),
             textposition="inside",
             hovertemplate="<b>%{y}</b><br>Avg Wage: %{text}<extra></extra>",
@@ -510,7 +524,7 @@ def update_comparison(top_n: int, metric: str):
             y=wage_rating["club_name"],
             x=wage_rating["overall_score"],
             orientation="h",
-            marker_color="#ef4444",
+            marker_color="#7dd3fc",
             text=wage_rating["avg_overall"].apply(lambda v: f"{v:.1f}"),
             textposition="inside",
             hovertemplate="<b>%{y}</b><br>Avg Overall: %{text}<extra></extra>",
@@ -525,7 +539,7 @@ def update_comparison(top_n: int, metric: str):
             y=wage_rating["club_name"],
             x=wage_rating["avg_wage"],
             orientation="h",
-            marker_color="#3b82f6",
+            marker_color="#0ea5e9",
             text=wage_rating["avg_wage"].apply(lambda v: f"€{v:,.0f}"),
             textposition="inside",
             hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
@@ -540,7 +554,7 @@ def update_comparison(top_n: int, metric: str):
             y=wage_rating["club_name"],
             x=wage_rating["avg_overall"],
             orientation="h",
-            marker_color="#ef4444",
+            marker_color="#7dd3fc",
             text=wage_rating["avg_overall"].apply(lambda v: f"{v:.1f}"),
             textposition="inside",
             hovertemplate="<b>%{y}</b><br>Overall: %{text}<extra></extra>",
@@ -602,7 +616,7 @@ def update_relationship(ftype, fval, age_range):
     scatter_fig = px.scatter(
         sub, x="age", y="overall",
         color="Player Type",
-        color_discrete_map={"Player": "#93c5fd", "Top Rated (Outlier)": "#f87171"},
+        color_discrete_map={"Player": "#90caf9", "Top Rated (Outlier)": "#0d47a1"},
         hover_name="short_name",
         title="Scatter — Age vs Overall Rating",
         labels={"age": "Age", "overall": "Overall Rating", "Player Type": "Player Type"},
@@ -630,7 +644,7 @@ def update_relationship(ftype, fval, age_range):
             bub, x="age", y="potential",
             size="value_eur", size_max=45,
             color="Player Type",
-            color_discrete_map={"Player": "#93c5fd", "High Potential (Outlier)": "#6ee7b7"},
+            color_discrete_map={"Player": "#a5d6a7", "High Potential (Outlier)": "#1b5e20"},
             hover_name="short_name",
             title="Bubble — Age vs Potential  (bubble size = Market Value €)",
             labels={"age": "Age", "potential": "Potential",
@@ -672,7 +686,7 @@ def update_distribution(position, metric):
         sub, x="age", nbins=20,
         title=f"Histogram — Age Distribution  ({pos_label})",
         labels={"age": "Age", "count": "Number of Players"},
-        color_discrete_sequence=["#3b82f6"],
+        color_discrete_sequence=["#1f77b4"],
         template=TEMPLATE, height=H,
     )
     hist_fig.update_layout(
@@ -690,6 +704,7 @@ def update_distribution(position, metric):
     box_fig = px.box(
         box_sub, x="position_group", y=metric,
         color="position_group", points="outliers",
+        color_discrete_sequence=_TEALS,
         title=f"Box Plot — {mlabel} by Position Group",
         labels={"position_group": "Position", metric: mlabel},
         template=TEMPLATE, height=H,
@@ -703,6 +718,7 @@ def update_distribution(position, metric):
     violin_fig = px.violin(
         box_sub, x="position_group", y=metric,
         color="position_group", box=True,
+        color_discrete_sequence=_TEALS,
         title=f"Violin — {mlabel} Distribution by Position Group",
         labels={"position_group": "Position", metric: mlabel},
         template=TEMPLATE, height=H,
@@ -752,7 +768,7 @@ def update_timeseries(ftype, fval, age_range):
         labels={"age": "Age", "overall": "Mean Overall Rating"},
         template=TEMPLATE, height=H,
     )
-    line_fig.update_traces(line=dict(width=3, color="#1d4ed8"))
+    line_fig.update_traces(line=dict(width=3))
     line_fig.update_layout(
         hovermode="x unified",
         xaxis_title="Age", yaxis_title="Mean Overall Rating",
@@ -765,7 +781,7 @@ def update_timeseries(ftype, fval, age_range):
         labels={"age": "Age", "players": "Player Count"},
         template=TEMPLATE, height=H,
     )
-    area_fig.update_traces(line_color="#3b82f6", fillcolor="rgba(59,130,246,0.25)")
+    area_fig.update_traces(line_color="#636efa", fillcolor="rgba(99,110,250,0.35)")
     area_fig.update_layout(
         xaxis_title="Age", yaxis_title="Player Count",
     )
