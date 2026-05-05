@@ -668,6 +668,50 @@ body::after {
   stroke-width: 1.5px !important;
 }
 
+.chart-card .js-plotly-plot,
+.chart-card .plot-container,
+.chart-card .svg-container {
+  background: #ffffff !important;
+}
+
+.chart-card .main-svg .bg,
+.chart-card .main-svg .bglayer rect,
+.chart-card .main-svg .plot .bg {
+  fill: #ffffff !important;
+}
+
+.chart-card .main-svg text,
+.chart-card .main-svg .gtitle,
+.chart-card .main-svg .xtitle,
+.chart-card .main-svg .ytitle,
+.chart-card .main-svg .legendtext,
+.chart-card .main-svg .annotation-text,
+.chart-card .main-svg .xtick text,
+.chart-card .main-svg .ytick text,
+.chart-card .main-svg .colorbar text {
+  fill: #1f3657 !important;
+  color: #1f3657 !important;
+}
+
+.chart-card .main-svg .gridlayer path,
+.chart-card .main-svg .xgrid,
+.chart-card .main-svg .ygrid {
+  stroke: rgba(31, 54, 87, 0.12) !important;
+}
+
+.chart-card .main-svg .zerolinelayer path,
+.chart-card .main-svg .xzl,
+.chart-card .main-svg .yzl,
+.chart-card .main-svg .xlines-above path,
+.chart-card .main-svg .ylines-above path {
+  stroke: rgba(31, 54, 87, 0.32) !important;
+}
+
+.chart-card .main-svg .legend rect.bg {
+  fill: #ffffff !important;
+  stroke: rgba(31, 54, 87, 0.18) !important;
+}
+
 .accent-blue .card-icon {
   background: var(--blue);
   box-shadow: 0 0 24px rgba(33, 168, 255, 0.5);
