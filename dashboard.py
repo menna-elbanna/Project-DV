@@ -409,25 +409,25 @@ def update_comparison(top_n: int, metric: str):
         plot_bgcolor="white", paper_bgcolor="white",
     )
 
-    # ── 2. Bar — Top N players by overall (horizontal) ────────────────────────
+    # ── 2. Bar — Top N players by overall (vertical, like Person 2's original) ──
     top_players = (
         DF.nlargest(top_n * 3, "overall")
         .drop_duplicates("short_name")
         .head(top_n)[["short_name", "overall", "club_name"]]
     )
     bar_fig = px.bar(
-        top_players, x="overall", y="short_name", orientation="h",
+        top_players, x="short_name", y="overall",
         text="overall",
-        color="overall", color_continuous_scale="Greens",
-        title=f"Bar Chart — Top {top_n} Players by Overall Rating",
-        labels={"short_name": "Player", "overall": "Overall Rating"},
+        color="overall", color_continuous_scale="viridis",
+        title=f"Top {top_n} Players in FIFA",
+        labels={"short_name": "Player", "overall": "Rating"},
         template=TEMPLATE, height=H,
     )
-    bar_fig.update_traces(textposition="outside")
+    bar_fig.update_traces(texttemplate="%{text}", textposition="outside")
     bar_fig.update_layout(
-        yaxis={"categoryorder": "total ascending"},
+        xaxis_tickangle=-45,
         coloraxis_showscale=False,
-        xaxis_title="Overall Rating", yaxis_title="Player",
+        xaxis_title="Player", yaxis_title="Rating",
         plot_bgcolor="white", paper_bgcolor="white",
     )
 
@@ -607,30 +607,44 @@ def update_relationship(ftype, fval, age_range):
         msg = "No data for this filter — widen the age range or select All."
         return _empty(msg), _empty(msg)
 
-    # Scatter — Age vs Overall Rating
+    # Scatter — Age vs Overall Rating  (Person 5 original)
     sub = sub.copy()
     threshold = sub["overall"].quantile(0.95)
     sub["Player Type"] = sub["overall"].apply(
         lambda x: "Top Rated (Outlier)" if x >= threshold else "Player"
     )
+    top10_scatter = set(sub.nlargest(10, "overall")["short_name"])
+    sub["label"] = sub["short_name"].apply(lambda n: n if n in top10_scatter else "")
     scatter_fig = px.scatter(
         sub, x="age", y="overall",
         color="Player Type",
-        color_discrete_map={"Player": "#90caf9", "Top Rated (Outlier)": "#0d47a1"},
+        color_discrete_map={"Player": "lightblue", "Top Rated (Outlier)": "lightcoral"},
+        text="label",
         hover_name="short_name",
-        title="Scatter — Age vs Overall Rating",
+        title="<b>Age vs Overall Rating</b>",
         labels={"age": "Age", "overall": "Overall Rating", "Player Type": "Player Type"},
         template=TEMPLATE, height=H,
     )
     scatter_fig.update_traces(
-        marker=dict(size=6, opacity=0.75, line=dict(width=0.5, color="black"))
+        marker=dict(line=dict(width=1, color="black")),
+        textposition="top center", textfont=dict(size=9),
     )
     scatter_fig.update_layout(
-        xaxis_title="Age", yaxis_title="Overall Rating",
-        legend=dict(bgcolor="white", bordercolor="#ddd", borderwidth=1),
+        title_x=0.5,
+        legend=dict(x=0.98, y=0.98, xanchor="right", yanchor="top",
+                    bgcolor="white", bordercolor="black", borderwidth=1),
+        xaxis=dict(showgrid=True, gridcolor="lightgrey",
+                   showline=True, linecolor="black", mirror=True),
+        yaxis=dict(range=[0, sub["overall"].max() + 5],
+                   showgrid=True, gridcolor="lightgrey",
+                   showline=True, linecolor="black", mirror=True),
+        shapes=[dict(type="rect", xref="paper", yref="paper",
+                     x0=0, y0=0, x1=1, y1=1,
+                     line=dict(color="black", width=2))],
+        plot_bgcolor="white", paper_bgcolor="white",
     )
 
-    # Bubble — Age vs Potential (size = market value)
+    # Bubble — Age vs Potential  (Person 5 original)
     bub = sub.dropna(subset=["value_eur", "potential"])
     bub = bub[bub["value_eur"] > 0].copy()
     if bub.empty:
@@ -640,23 +654,37 @@ def update_relationship(ftype, fval, age_range):
         bub["Player Type"] = bub["potential"].apply(
             lambda x: "High Potential (Outlier)" if x >= bp_thresh else "Player"
         )
+        top10_bubble = set(bub.nlargest(10, "potential")["short_name"])
+        bub["label"] = bub["short_name"].apply(lambda n: n if n in top10_bubble else "")
         bubble_fig = px.scatter(
             bub, x="age", y="potential",
-            size="value_eur", size_max=45,
+            size="value_eur", size_max=50,
             color="Player Type",
-            color_discrete_map={"Player": "#a5d6a7", "High Potential (Outlier)": "#1b5e20"},
+            color_discrete_map={"Player": "lightblue", "High Potential (Outlier)": "lightgreen"},
+            text="label",
             hover_name="short_name",
-            title="Bubble — Age vs Potential  (bubble size = Market Value €)",
+            title="<b>Age vs Potential</b>  (Bubble Size = Market Value €)",
             labels={"age": "Age", "potential": "Potential",
                     "value_eur": "Value (€)", "Player Type": "Player Type"},
             template=TEMPLATE, height=H,
         )
         bubble_fig.update_traces(
-            marker=dict(opacity=0.75, line=dict(width=0.5, color="black"))
+            marker=dict(line=dict(width=1, color="black")),
+            textposition="top center", textfont=dict(size=9),
         )
         bubble_fig.update_layout(
-            xaxis_title="Age", yaxis_title="Potential",
-            legend=dict(bgcolor="white", bordercolor="#ddd", borderwidth=1),
+            title_x=0.5,
+            legend=dict(x=0.98, y=0.98, xanchor="right", yanchor="top",
+                        bgcolor="white", bordercolor="black", borderwidth=1),
+            xaxis=dict(showgrid=True, gridcolor="lightgrey",
+                       showline=True, linecolor="black", mirror=True),
+            yaxis=dict(range=[0, bub["potential"].max() + 5],
+                       showgrid=True, gridcolor="lightgrey",
+                       showline=True, linecolor="black", mirror=True),
+            shapes=[dict(type="rect", xref="paper", yref="paper",
+                         x0=0, y0=0, x1=1, y1=1,
+                         line=dict(color="black", width=2))],
+            plot_bgcolor="white", paper_bgcolor="white",
         )
 
     return scatter_fig, bubble_fig
@@ -694,27 +722,25 @@ def update_distribution(position, metric):
         xaxis_title="Age", yaxis_title="Number of Players",
     )
 
-    # Box — metric by position group
-    box_sub = DF_SAMPLE.copy()   # always show all positions for context
-    if metric == "wage_eur":
-        # cap extreme outliers for readability
-        cap = box_sub["wage_eur"].quantile(0.97)
-        box_sub = box_sub[box_sub["wage_eur"] <= cap]
-
+    # Box — uses main_position (raw: ST, CB, GK…) like Person 2's original
+    box_sub = DF_SAMPLE.copy()
     box_fig = px.box(
-        box_sub, x="position_group", y=metric,
-        color="position_group", points="outliers",
+        box_sub, x="main_position", y="wage_eur",
+        color="main_position", points="outliers",
         color_discrete_sequence=_TEALS,
-        title=f"Box Plot — {mlabel} by Position Group",
-        labels={"position_group": "Position", metric: mlabel},
+        title="Salary Distribution by Player Position",
+        labels={"main_position": "Position", "wage_eur": "Wage (EUR)"},
         template=TEMPLATE, height=H,
     )
     box_fig.update_layout(
         showlegend=False,
-        xaxis_title="Position", yaxis_title=mlabel,
+        xaxis_tickangle=-45,
+        xaxis_title="Position", yaxis_title="Wage (EUR)",
+        yaxis_range=[0, 250000],
+        plot_bgcolor="white", paper_bgcolor="white",
     )
 
-    # Violin — metric by position group
+    # Violin — keeps position_group + dynamic metric
     violin_fig = px.violin(
         box_sub, x="position_group", y=metric,
         color="position_group", box=True,
