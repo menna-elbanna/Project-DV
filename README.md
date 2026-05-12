@@ -36,19 +36,19 @@ The dashboard is styled with a sleek dark holographic stadium theme, built using
 
 ### 📊 13 Visualization Modules
 
-- **Column Chart** — Top N clubs by average overall rating (winner highlighted, leftmost)
-- **Horizontal Bar Chart** — Top N elite players ranked by overall rating
-- **Stacked Column Chart** — Position depth per club (Forward / Midfielder / Defender / GK)
-- **Stacked Bar Chart** — Nationality mix across top clubs
-- **Clustered Column Chart** — Players by position group and rating band
-- **Clustered Bar Chart** — Average wage vs average overall rating (normalized comparison)
-- **Scatter Chart** — Age vs Overall Rating with outlier detection and player labeling
-- **Bubble Chart** — Age vs Potential, bubble size = market value (€)
-- **Histogram** — Age distribution by position group
-- **Box Plot** — Wage distribution across all player positions
-- **Violin Chart** — Overall rating or wage density by position group with median annotations
-- **Line Chart** — Mean overall rating across age with optional 5-age and 10-age moving averages
-- **Area Chart (simple + stacked)** — Player count volume and position composition by age
+- **Column Chart** —> Top N clubs by average overall rating (winner highlighted, leftmost)
+- **Horizontal Bar Chart** —> Top N elite players ranked by overall rating
+- **Stacked Column Chart** —> Position depth per club (Forward / Midfielder / Defender / GK)
+- **Stacked Bar Chart** —> Nationality mix across top clubs
+- **Clustered Column Chart** —> Players by position group and rating band
+- **Clustered Bar Chart** —> Average wage vs average overall rating (normalized comparison)
+- **Scatter Chart** —> Age vs Overall Rating with outlier detection and player labeling
+- **Bubble Chart** —> Age vs Potential, bubble size = market value (€)
+- **Histogram** —> Age distribution by position group
+- **Box Plot** —> Wage distribution across all player positions
+- **Violin Chart** —> Overall rating or wage density by position group with median annotations
+- **Line Chart** —> Mean overall rating across age with optional 5-age and 10-age moving averages
+- **Area Chart (simple + stacked)** —> Player count volume and position composition by age
 
 ### ⚙️ Interactive Controls
 
